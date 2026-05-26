@@ -3,39 +3,35 @@ name: Prepare Zenodo JSON on Release
 on:
   release:
     types: [published, edited]
-  workflow_dispatch: # 画面からの手動実行も残しておきます
+  workflow_dispatch:
 
 jobs:
   build-json:
     runs-on: ubuntu-latest
     steps:
-      # 1. リポジトリのファイルを読み込む
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. workflowsフォルダ内の各ファイルからデータを読み込み
       - name: Generate .zenodo.json from files
         run: |
           # =========================================================
-          # 1. 基本設定（ご指定の文字列を完全にセットしました）
+          # 基本設定（★ここだけ書き換えてください★）
           # =========================================================
           TITLE="原本工学 (MCE)シリーズ論文 平和の実装"
           CREATORS='[{"name": "：テスト", "affiliation": "テスト２"}]'
           LICENSE="cc-by-nc-nd-4.0"
           UPLOAD_TYPE="publication"
           PUBLICATION_TYPE="preprint"
-
+          
           # =========================================================
-          # 2. 各ファイルからデータを安全に自動読み込み（バグの原因を完全排除）
+          # 各テキストファイルから長文を安全に自動読み込み
           # =========================================================
           DESCRIPTION=$(jq -Rs . < .github/workflows/zenodo_description.html)
           NOTES=$(jq -Rs . < .github/workflows/zenodo_notes.html)
           KEYWORDS=$(jq -R . < .github/workflows/zenodo_keywords.txt | jq -s .)
           RELATED_IDENTIFIERS="[]"
 
-          # =========================================================
-          # 3. データを合体させて .zenodo.json を出力
-          # =========================================================
+          # 一時エリアに .zenodo.json を出力（★ここで処理を終了させます★）
           jq -n \
             --arg title "$TITLE" \
             --argjson creators "$CREATORS" \
