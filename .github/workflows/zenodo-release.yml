@@ -4,6 +4,9 @@ on:
   release:
     types: [published, edited]
 
+permissions:
+  contents: write
+
 jobs:
   build-json:
     runs-on: ubuntu-latest
