@@ -15,27 +15,37 @@ jobs:
         with:
           ref: main
 
-      # ★【変更】読み込み時に tr コマンドを使って Windowsのゴミ（\r）を完全に消去するように改良しました
       - name: Generate .zenodo.json from files
         run: |
           TITLE="原本工学 (MCE)シリーズ論文 平和の実装"
-          CREATORS='[{"name": "：テスト", "affiliation": "テスト２"}]'
+          
+          # =========================================================
+          # ★【修正①】著者名を正式な形式に直しました（全角コロンを排除）
+          # =========================================================
+          CREATORS='[{"name": "山田, 太郎", "affiliation": "〇〇大学"}]'
+          
           LICENSE="cc-by-nc-nd-4.0"
           UPLOAD_TYPE="publication"
           PUBLICATION_TYPE="preprint"
+          
+          # =========================================================
+          # ★【修正②】今日の日付（例: 2026-05-27）を自動で取得してセットします
+          # =========================================================
+          PUB_DATE=$(date +'%Y-%m-%d')
 
           DESCRIPTION=$(tr -d '\r' < .github/workflows/zenodo_description.html | jq -Rs .)
           NOTES=$(tr -d '\r' < .github/workflows/zenodo_notes.html | jq -Rs .)
           KEYWORDS=$(tr -d '\r' < .github/workflows/zenodo_keywords.txt | jq -R . | jq -s .)
           RELATED_IDENTIFIERS="[]"
 
-          # ルートフォルダに .zenodo.json を出力
+          # ルートフォルダに正確な .zenodo.json を出力
           jq -n \
             --arg title "$TITLE" \
             --argjson creators "$CREATORS" \
             --arg license "$LICENSE" \
             --arg upload_type "$UPLOAD_TYPE" \
             --arg publication_type "$PUBLICATION_TYPE" \
+            --arg publication_date "$PUB_DATE" \
             --argjson notes "$NOTES" \
             --argjson description "$DESCRIPTION" \
             --argjson keywords "$KEYWORDS" \
@@ -46,6 +56,7 @@ jobs:
               license: $license, 
               upload_type: $upload_type, 
               publication_type: $publication_type, 
+              publication_date: $publication_date, 
               notes: $notes, 
               description: $description, 
               keywords: $keywords,
