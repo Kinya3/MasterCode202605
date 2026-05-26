@@ -1,10 +1,7 @@
-name: Prepare Zenodo JSON on Release
-
-# =========================================================
-# ★【変更】リリース時のトリガーを削除し、手動実行のみに制限しました
-# =========================================================
+name: Prepare Zenodo JSON for MCE READ Phase
+# 原本記述の確定を制御するため、手動実行(workflow_dispatch)に限定します
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -13,54 +10,85 @@ jobs:
   build-json:
     runs-on: ubuntu-latest
     steps:
-      # 1. mainブランチの最新状態を読み込む
+      # 1. リポジトリの最新コードをチェックアウト
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: main
 
-      # 2. 各テキストファイルからデータを読み込んで合体
-      - name: Generate .zenodo.json from files
+      # 2. 原本記述の自動校閲（エスケープ文字の除去とトリミング）
+      - name: Clean and Process Metadata
+        id: process_metadata
         run: |
-          TITLE="原本工学 (MCE)シリーズ論文 平和の実装"
-          CREATORS='[{"name": "：テスト", "affiliation": "テスト２"}]'
-          LICENSE="cc-by-nc-nd-4.0"
-          UPLOAD_TYPE="publication"
-          PUBLICATION_TYPE="preprint"
+          # Descriptionの校閲: Windows改行コード(\r)を除去し、JSONエスケープ処理
+          if [ -f "zenodo_description.html" ]; then
+            # \rを削除し、前後の不要な空白をトリミング
+            CLEAN_DESC=$(cat zenodo_description.html | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            # JSON文字列として安全な形式に変換
+            echo "description<<EOF" >> $GITHUB_ENV
+            echo "$CLEAN_DESC" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          else
+            echo "Error: zenodo_description.html not found."
+            exit 1
+          fi
 
-          DESCRIPTION=$(jq -Rs . < .github/workflows/zenodo_description.html)
-          NOTES=$(jq -Rs . < .github/workflows/zenodo_notes.html)
-          KEYWORDS=$(jq -R . < .github/workflows/zenodo_keywords.txt | jq -s .)
-          RELATED_IDENTIFIERS="[]"
+          # Keywordsの校閲: 1行1単語形式を読み込み、配列化
+          if [ -f "zenodo_keywords.txt" ]; then
+            # \rを削除し、空行を除外してJSON配列に変換
+            KEYWORDS_JSON=$(cat zenodo_keywords.txt | tr -d '\r' | grep -v '^$' | jq -R . | jq -s -c .)
+            echo "keywords=$KEYWORDS_JSON" >> $GITHUB_ENV
+          else
+            echo "keywords=[]" >> $GITHUB_ENV
+          fi
 
-          # ルートフォルダに .zenodo.json を出力
-          jq -n \
-            --arg title "$TITLE" \
-            --argjson creators "$CREATORS" \
-            --arg license "$LICENSE" \
-            --arg upload_type "$UPLOAD_TYPE" \
-            --arg publication_type "$PUBLICATION_TYPE" \
-            --argjson notes "$NOTES" \
-            --argjson description "$DESCRIPTION" \
-            --argjson keywords "$KEYWORDS" \
-            --argjson related_identifiers "$RELATED_IDENTIFIERS" \
-            '{
-              title: $title, 
-              creators: $creators, 
-              license: $license, 
-              upload_type: $upload_type, 
-              publication_type: $publication_type, 
-              notes: $notes, 
-              description: $description, 
-              keywords: $keywords,
-              related_identifiers: $related_identifiers
-            }' > .zenodo.json
-
-      # 3. 出来上がった .zenodo.json を、mainブランチのルートに保存（プッシュ）
-      - name: Commit and Push .zenodo.json to main
+      # 3. .zenodo.json の生成（奏位9：鋼体のメタデータ構築）
+      - name: Build .zenodo.json
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@://github.com"
+          cat <<EOF > .zenodo.json
+          {
+            "title": "原本工学（Master-Code Engineering）体系：READフェーズ（第１～１４論文）",
+            "description": $(echo "$description" | jq -aR . | jq -s . | tr -d '\n'),
+            "upload_type": "publication",
+            "publication_type": "article",
+            "access_right": "open",
+            "license": "cc-by-nc-nd-4.0",
+            "creators": [
+              {
+                "name": "響：無名の知の冒険",
+                "affiliation": "原本校閲局 (Archetype Editorial Bureau)"
+              }
+            ],
+            "keywords": ${{ env.keywords }},
+            "related_identifiers": [
+              {
+                "identifier": "10.5281/zenodo.18166708",
+                "relation": "isDescribedBy",
+                "resource_type": "publication-article"
+              },
+              {
+                "identifier": "10.5281/zenodo.18361084",
+                "relation": "isDescribedBy",
+                "resource_type": "publication-article"
+              },
+              {
+                "identifier": "10.5281/zenodo.19560926",
+                "relation": "isSupplementTo",
+                "resource_type": "publication-section"
+              }
+            ]
+          }
+          EOF
+
+      # 4. 生成されたJSONの整合性チェック（ハルシネーションの排除）
+      - name: Validate JSON
+        run: jq . .zenodo.json
+
+      # 5. 原本ログの更新をリポジトリへ反映
+      - name: Commit .zenodo.json
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           git add .zenodo.json
-          git commit -m "chore: auto-generate .zenodo.json [skip ci]" || exit 0
-          git push origin HEAD:main
+          git commit -m "Update .zenodo.json for MCE READ Phase Release" || echo "No changes to commit"
+          git push origin main
