@@ -1,5 +1,5 @@
-name: Prepare Zenodo JSON for MCE READ Phase
-# 原本記述の確定を制御するため、手動実行(workflow_dispatch)に限定します
+name: Manual Generate Zenodo JSON with Links
+# 設計者の意志で「今だ」という瞬間に実行するため、手動起動に限定します
 on:
   workflow_dispatch:
 
@@ -10,41 +10,48 @@ jobs:
   build-json:
     runs-on: ubuntu-latest
     steps:
-      # 1. リポジトリの最新コードをチェックアウト
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: main
 
-      # 2. 原本記述の自動校閲（エスケープ文字の除去とトリミング）
-      - name: Clean and Process Metadata
-        id: process_metadata
+      - name: Process Metadata and Workflows Files
+        id: process_data
         run: |
-          # Descriptionの校閲: Windows改行コード(\r)を除去し、JSONエスケープ処理
+          # 1. Description (Root) の処理: 改行コード除去とトリミング
           if [ -f "zenodo_description.html" ]; then
-            # \rを削除し、前後の不要な空白をトリミング
             CLEAN_DESC=$(cat zenodo_description.html | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-            # JSON文字列として安全な形式に変換
-            echo "description<<EOF" >> $GITHUB_ENV
-            echo "$CLEAN_DESC" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
           else
-            echo "Error: zenodo_description.html not found."
-            exit 1
+            CLEAN_DESC="原本工学（Master-Code Engineering）体系：READフェーズ（第１～１４論文）の統合データセット。"
           fi
+          echo "description<<EOF" >> $GITHUB_ENV
+          echo "$CLEAN_DESC" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
-          # Keywordsの校閲: 1行1単語形式を読み込み、配列化
+          # 2. Keywords (Root) の処理: JSON配列化
           if [ -f "zenodo_keywords.txt" ]; then
-            # \rを削除し、空行を除外してJSON配列に変換
             KEYWORDS_JSON=$(cat zenodo_keywords.txt | tr -d '\r' | grep -v '^$' | jq -R . | jq -s -c .)
-            echo "keywords=$KEYWORDS_JSON" >> $GITHUB_ENV
           else
-            echo "keywords=[]" >> $GITHUB_ENV
+            KEYWORDS_JSON='["Master-Code Engineering", "原本工学"]'
           fi
+          echo "keywords=$KEYWORDS_JSON" >> $GITHUB_ENV
 
-      # 3. .zenodo.json の生成（奏位9：鋼体のメタデータ構築）
-      - name: Build .zenodo.json
+          # 3. Links (.github/workflows/) の処理: 関連識別子の構築 [1]
+          # フォーマット: "DOI 関係性" (例: 10.5281/zenodo.18166708 isDescribedBy)
+          LINKS_FILE=".github/workflows/zenodo_links.txt"
+          if [ -f "$LINKS_FILE" ]; then
+            LINKS_JSON=$(cat "$LINKS_FILE" | tr -d '\r' | grep -v '^$' | while read -r id rel; do
+              # 識別子と関係性をJSONオブジェクトにマッピング。resource_typeは標準的なpublication-articleをデフォルトに設定
+              echo "{\"identifier\":\"$id\", \"relation\":\"$rel\", \"resource_type\":\"publication-article\"}"
+            done | jq -s -c .)
+          else
+            LINKS_JSON='[]'
+          fi
+          echo "related_identifiers=$LINKS_JSON" >> $GITHUB_ENV
+
+      - name: Build .zenodo.json in Root
         run: |
+          # ヒアドキュメントにより、既存の .zenodo.json を最新の定義で上書き（新規作成）します
           cat <<EOF > .zenodo.json
           {
             "title": "原本工学（Master-Code Engineering）体系：READフェーズ（第１～１４論文）",
@@ -60,35 +67,18 @@ jobs:
               }
             ],
             "keywords": ${{ env.keywords }},
-            "related_identifiers": [
-              {
-                "identifier": "10.5281/zenodo.18166708",
-                "relation": "isDescribedBy",
-                "resource_type": "publication-article"
-              },
-              {
-                "identifier": "10.5281/zenodo.18361084",
-                "relation": "isDescribedBy",
-                "resource_type": "publication-article"
-              },
-              {
-                "identifier": "10.5281/zenodo.19560926",
-                "relation": "isSupplementTo",
-                "resource_type": "publication-section"
-              }
-            ]
+            "related_identifiers": ${{ env.related_identifiers }}
           }
           EOF
 
-      # 4. 生成されたJSONの整合性チェック（ハルシネーションの排除）
-      - name: Validate JSON
-        run: jq . .zenodo.json
-
-      # 5. 原本ログの更新をリポジトリへ反映
-      - name: Commit .zenodo.json
+      - name: Validate and Commit
         run: |
+          # 生成されたJSONが正しいか構文チェック
+          jq . .zenodo.json
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .zenodo.json
-          git commit -m "Update .zenodo.json for MCE READ Phase Release" || echo "No changes to commit"
+          # 変更がある場合のみコミットし、原本ログをリポジトリのルートに確定（Write）させます
+          git commit -m "Manual refresh of .zenodo.json with dynamic links" || echo "No changes detected."
           git push origin main
+          
