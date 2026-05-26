@@ -1,37 +1,39 @@
 name: Prepare Zenodo JSON on Release
 
+# =========================================================
+# ★【変更】リリース時のトリガーを削除し、手動実行のみに制限しました
+# =========================================================
 on:
-  release:
-    types: [published, edited]
-  workflow_dispatch:
+  workflow_dispatch: 
+
+permissions:
+  contents: write
 
 jobs:
   build-json:
     runs-on: ubuntu-latest
     steps:
+      # 1. mainブランチの最新状態を読み込む
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: main
 
+      # 2. 各テキストファイルからデータを読み込んで合体
       - name: Generate .zenodo.json from files
         run: |
-          # =========================================================
-          # 基本設定（★ここだけ書き換えてください★）
-          # =========================================================
           TITLE="原本工学 (MCE)シリーズ論文 平和の実装"
           CREATORS='[{"name": "：テスト", "affiliation": "テスト２"}]'
           LICENSE="cc-by-nc-nd-4.0"
           UPLOAD_TYPE="publication"
           PUBLICATION_TYPE="preprint"
-          
-          # =========================================================
-          # 各テキストファイルから長文を安全に自動読み込み
-          # =========================================================
+
           DESCRIPTION=$(jq -Rs . < .github/workflows/zenodo_description.html)
           NOTES=$(jq -Rs . < .github/workflows/zenodo_notes.html)
           KEYWORDS=$(jq -R . < .github/workflows/zenodo_keywords.txt | jq -s .)
           RELATED_IDENTIFIERS="[]"
 
-          # 一時エリアに .zenodo.json を出力（★ここで処理を終了させます★）
+          # ルートフォルダに .zenodo.json を出力
           jq -n \
             --arg title "$TITLE" \
             --argjson creators "$CREATORS" \
@@ -53,4 +55,12 @@ jobs:
               keywords: $keywords,
               related_identifiers: $related_identifiers
             }' > .zenodo.json
-            
+
+      # 3. 出来上がった .zenodo.json を、mainブランチのルートに保存（プッシュ）
+      - name: Commit and Push .zenodo.json to main
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@://github.com"
+          git add .zenodo.json
+          git commit -m "chore: auto-generate .zenodo.json [skip ci]" || exit 0
+          git push origin HEAD:main
