@@ -31,13 +31,12 @@ jobs:
           # =========================================================
           
         
-        # 各ファイルからのデータ読み込みと合体処理
+
         
           DESCRIPTION=$(jq -Rs . < .github/workflows/zenodo_description.html)
           KEYWORDS=$(jq -R . < .github/workflows/zenodo_keywords.txt | jq -s .)
           RELATED_IDENTIFIERS="[]"
 
-          # リポジトリ内（一時エリア）に .zenodo.json を出力
           jq -n \
             --arg title "$TITLE" \
             --argjson creators "$CREATORS" \
@@ -59,7 +58,6 @@ jobs:
               keywords: $keywords,
               related_identifiers: $related_identifiers
             }' > .zenodo.json
-
 
 
 
