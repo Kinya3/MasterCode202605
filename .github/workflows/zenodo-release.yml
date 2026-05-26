@@ -2,7 +2,7 @@ name: Prepare Zenodo JSON on Release
 
 on:
   release:
-    types: [published, edited] # GitHubでリリースが公開または編集されたときに起動
+    types: [published, edited]
 
 jobs:
   build-json:
