@@ -1,1 +1,79 @@
+name: Prepare Zenodo JSON on Release
+
+on:
+  release:
+    types: [published, edited] # GitHubでリリースが公開または編集されたときに起動
+
+jobs:
+  build-json:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate .zenodo.json from files
+        run: |
+          # =========================================================
+          # 1. 基本設定（ご自身の情報に書き換えてください）
+          # =========================================================
+          TITLE="マイプロジェクトのタイトル (${{ github.event.release.tag_name }})"
+          CREATORS='[{"name": "山田, 太郎", "affiliation": "〇〇大学"}]'
+          LICENSE="cc-by-nc-nd-4.0"
+          UPLOAD_TYPE="software"
+          NOTES="ここに注記（Notes）の文章を記述します。"
+
+
+          # =========================================================
+          # 2. workflowsフォルダ内の各ファイルからデータを読み込み・自動変換
+          # =========================================================
+          DESCRIPTION=$(jq -Rs . < .github/workflows/zenodo_description.html)
+          KEYWORDS=$(jq -R . < .github/workflows/zenodo_keywords.txt | jq -s .)
+          
+          # 関連リンク（zenodo_links.txt）を読み込み、URLかDOIかを自動判別してJSON配列化
+          if [ -f .github/workflows/zenodo_links.txt ]; then
+            RELATED_IDENTIFIERS=$(awk 'NF==2 {
+              scheme = ($1 ~ /^http/) ? "url" : "doi";
+              printf "{\"identifier\":\"%s\",\"relation\":\"%s\",\"scheme\":\"%s\"},", $1, $2, scheme
+            }' .github/workflows/zenodo_links.txt | sed 's/,$//')
+            RELATED_IDENTIFIERS="[$RELATED_IDENTIFIERS]"
+          else
+            RELATED_IDENTIFIERS="[]"
+          fi
+
+          # =========================================================
+          # 3. ルート階層にすべてのデータを合体させた .zenodo.json を出力
+          # =========================================================
+          jq -n \
+            --arg title "$TITLE" \
+            --argjson creators "$CREATORS" \
+            --arg license "$LICENSE" \
+            --arg upload_type "$UPLOAD_TYPE" \
+            --arg notes "$NOTES" \
+            --argjson description "$DESCRIPTION" \
+            --argjson keywords "$KEYWORDS" \
+            --argjson related_identifiers "$RELATED_IDENTIFIERS" \
+            '{
+              title: $title, 
+              creators: $creators, 
+              license: $license, 
+              upload_type: $upload_type, 
+              notes: $notes, 
+              description: $description, 
+              keywords: $keywords,
+              related_identifiers: $related_identifiers
+            }' > .zenodo.json
+
+      - name: Commit and Push .zenodo.json
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@://github.com"
+          git add .zenodo.json
+          git commit -m "chore: auto-generate .zenodo.json for Zenodo release [skip ci]" || exit 0
+          git push
+
+
+
+
+
+
 
