@@ -16,10 +16,10 @@ jobs:
           # =========================================================
           # 1. 基本設定（ご自身の情報に書き換えてください）
           # =========================================================
-          TITLE="マイプロジェクトのタイトル (${{ github.event.release.tag_name }})"
-          CREATORS='[{"name": "山田, 太郎", "affiliation": "〇〇大学"}]'
+          TITLE="原本工学 (MCE)シリーズ論文 平和の実装 (${{ github.event.release.tag_name }})"
+          CREATORS='[{"name": "：田中 欽也（Tanaka Kinya）", "affiliation": "MirandaWorks株式会社"}]'
           LICENSE="cc-by-nc-nd-4.0"
-          UPLOAD_TYPE="software"
+          UPLOAD_TYPE="preprint"
           NOTES="ここに注記（Notes）の文章を記述します。"
 
 
