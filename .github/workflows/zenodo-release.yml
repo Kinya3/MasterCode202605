@@ -20,7 +20,7 @@ jobs:
           # 1. 基本設定（ご自身の情報に書き換えてください）
           # =========================================================
           TITLE="原本工学 (MCE)シリーズ論文 平和の実装"
-          CREATORS='[{"name": "：田中 欽也（Tanaka Kinya）", "affiliation": "MirandaWorks株式会社"}]'
+          CREATORS='[{"name": "：テスト", "affiliation": "テスト２"}]'
           LICENSE="cc-by-nc-nd-4.0"
           UPLOAD_TYPE="publication"
           PUBLICATION_TYPE="preprint"
