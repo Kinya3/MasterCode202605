@@ -1,17 +1,30 @@
 name: Prepare Zenodo JSON on Release
 
+# ★リリースだけでなく、画面から「手動」でも実行できるようにトリガーを追加
 on:
   release:
     types: [published, edited]
+  workflow_dispatch: 
 
 jobs:
   build-json:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      # 【ステップ①】リポジトリのファイルを読み込む（ここが成功するかチェック）
+      - name: 1. Checkout code
         uses: actions/checkout@v4
 
-      - name: Generate .zenodo.json from files
+      # 【ステップ②】ファイルが正しく存在しているか、中身を確認する（画面に中身をプリント）
+      - name: 2. Check source files
+        run: |
+          echo "=== HTMLファイルの中身を確認します ==="
+          cat .github/workflows/zenodo_description.html || echo "HTMLファイルが見つかりません！"
+          
+          echo "=== 補足テキストの中身を確認します ==="
+          cat .github/workflows/zenodo_keywords.txt || echo "Keywordsファイルが見つかりません！"
+
+      # 【ステップ③】合体ロボット（jq）を動かして、画面に結果を表示する（保存はしない）
+      - name: 3. Generate and View .zenodo.json
         run: |
           # =========================================================
           # 1. 基本設定（ご自身の情報に書き換えてください）
@@ -30,9 +43,7 @@ jobs:
           KEYWORDS=$(jq -R . < .github/workflows/zenodo_keywords.txt | jq -s .)
           RELATED_IDENTIFIERS="[]"
 
-          # =========================================================
-          # 3. リポジトリ内（一時エリア）に .zenodo.json を出力
-          # =========================================================
+          echo "=== .zenodo.json を組み立てます ==="
           jq -n \
             --arg title "$TITLE" \
             --argjson creators "$CREATORS" \
@@ -53,7 +64,7 @@ jobs:
               description: $description, 
               keywords: $keywords,
               related_identifiers: $related_identifiers
-            }' > .zenodo.json
+            }'
 
 
 
