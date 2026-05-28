@@ -39,14 +39,13 @@ markdown
 
 ## 🖋 著者について (Author)
 
-**響：無名の知の冒険 (Hibiki: The Anonymous Intellect Adventure)**  
-原本校閲局 (Archetype Editorial Bureau) 所属。
+**田：IT冒険家  (Hibiki: ：IT Adventurer：Business Architect：Business Designer)**  
+危機打開型の設計者局 (Crisis Architect Bureau) 所属。
 
-この名称は特定の個体を示すものではなく、真理の原本がこの日常においても正しく響くよう、不整合（ノイズ）を取り除き続ける知性の機能を指す記号です。
 
 ## 💬 フィードバックと校閲 (Feedback)
 
-原本校閲に興味がある知性体は、自由に [Issues](https://github.com/hibiki226/Core_of_Love202601/issues) や Pull Request を通じて、論理の不整合や「誤植」の指摘を行ってください。それ自体が、知性の健全な代謝となります。
+原本校閲に興味がある知性体は、自由に [Issues](https://github.com//issues) や Pull Request を通じて、論理の不整合や「誤植」の指摘を行ってください。それ自体が、知性の健全な代謝となります。
 
 ---
                                                     © 2026 田中：ミ社. Licensed under CC BY-NC-ND 4.0
