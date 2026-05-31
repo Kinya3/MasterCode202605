@@ -22,12 +22,12 @@ jobs:
           # =========================================================
           # ★【修正①】著者名を正式な形式に直しました（全角コロンを排除）
           # =========================================================
-          CREATORS='[{"name": "テスト田中, ○○の太郎", "affiliation": "〇〇大学"}]'
+          CREATORS='[{"name": "Tanaka,Kinya", "affiliation": "MirandaWorks Co., Ltd."}]'
           
           LICENSE="cc-by-nc-nd-4.0"
           UPLOAD_TYPE="publication"
           PUBLICATION_TYPE="preprint"
-          ACCESS_RIGHT_TYPE="restricted"  # "open" か制限 "restricted"  「access_right」という設定項目が廃止（変更）され、代わりに「visibility」という1つの新しい項目に統一
+          ACCESS_RIGHT_TYPE="open"  # "open" か制限 "restricted"  「access_right」という設定項目が廃止（変更）され、代わりに「visibility」という1つの新しい項目に統一
           ACCESS_CONDITIONS_TYPE="Access to these files is restricted to researchers who fill out the request form and state a valid research purpose."
           COMMUNITIES_TYPE="[]"     # NULLは 「[]」と書く
 
