@@ -27,7 +27,10 @@ jobs:
           LICENSE="cc-by-nc-nd-4.0"
           UPLOAD_TYPE="publication"
           PUBLICATION_TYPE="preprint"
-          
+          ACCESS_RIGHT_TYPE="restricted"
+          ACCESS_CONDITIONS_TYPE="Access to these files is restricted to researchers who fill out the request form and state a valid research purpose."
+          COMMUNITIES_TYPE=""
+
           # =========================================================
           # ★【修正②】今日の日付（例: 2026-05-27）を自動で取得してセットします
           # =========================================================
@@ -46,6 +49,11 @@ jobs:
             --arg upload_type "$UPLOAD_TYPE" \
             --arg publication_type "$PUBLICATION_TYPE" \
             --arg publication_date "$PUB_DATE" \
+            
+            --arg access_right "$ACCESS_RIGHT_TYPE" \
+            --arg access_conditions "$ACCESS_CONDITIONS_TYPE" \
+            --arg communities "$COMMUNITIES_TYPE" \
+
             --argjson notes "$NOTES" \
             --argjson description "$DESCRIPTION" \
             --argjson keywords "$KEYWORDS" \
