@@ -29,7 +29,7 @@ jobs:
           PUBLICATION_TYPE="preprint"
           ACCESS_RIGHT_TYPE="restricted"
           ACCESS_CONDITIONS_TYPE="Access to these files is restricted to researchers who fill out the request form and state a valid research purpose."
-          COMMUNITIES_TYPE=""
+          COMMUNITIES_TYPE="[]"
 
           # =========================================================
           # ★【修正②】今日の日付（例: 2026-05-27）を自動で取得してセットします
