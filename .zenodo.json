@@ -2,7 +2,7 @@
   "title": "原本工学 (MCE)シリーズ論文 平和の実装",
   "creators": [
     {
-      "name": "テスト, ○○の太郎",
+      "name": "テスト田中, ○○の太郎",
       "affiliation": "〇〇大学"
     }
   ],
@@ -10,7 +10,7 @@
   "upload_type": "publication",
   "publication_type": "preprint",
   "publication_date": "2026-05-31",
-  "access_right": "restricted",
+  "visibility": "restricted",
   "access_conditions": "Access to these files is restricted to researchers who fill out the request form and state a valid research purpose.",
   "communities": [],
   "notes": "【重要：特許および利用ライセンスに関する告知】<br>\n※翻訳の網目による情報の劣化を避けるため、解釈に相違が生じた場合は日本文の記述を原本（正）とする。\n",
