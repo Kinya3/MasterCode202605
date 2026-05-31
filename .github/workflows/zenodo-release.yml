@@ -27,7 +27,7 @@ jobs:
           LICENSE="cc-by-nc-nd-4.0"
           UPLOAD_TYPE="publication"
           PUBLICATION_TYPE="preprint"
-          ACCESS_RIGHT_TYPE="restricted"  # "open" か制限 "restricted"
+          ACCESS_RIGHT_TYPE="restricted"  # "open" か制限 "restricted"  「access_right」という設定項目が廃止（変更）され、代わりに「visibility」という1つの新しい項目に統一
           ACCESS_CONDITIONS_TYPE="Access to these files is restricted to researchers who fill out the request form and state a valid research purpose."
           COMMUNITIES_TYPE="[]"     # NULLは 「[]」と書く
 
